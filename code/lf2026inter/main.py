@@ -1,8 +1,7 @@
 from machine import Pin, PWM
 import time
 
-enc_a = Pin(1, Pin.IN, Pin.PULL_UP)
-enc_b = Pin(0, Pin.IN, Pin.PULL_UP)
+enc_b = Pin('D ', Pin.IN, Pin.PULL_UP) #otacky2
 
 global positionMotoru
 positionMotoru = 0
@@ -25,14 +24,14 @@ sensorL2 = Pin('D11', Pin.IN)
 sensorL1 = Pin('D12', Pin.IN)
 
 # ------ Motor control pins ------
-motorL1 = Pin(11, Pin.OUT)
-motorL2 = Pin(10, Pin.OUT)
-motorR1 = Pin(20, Pin.OUT)
-motorR2 = Pin(21, Pin.OUT)
+motorL1 = Pin('D ', Pin.OUT)
+motorL2 = Pin('D ', Pin.OUT)
+motorR1 = Pin('D ', Pin.OUT)
+motorR2 = Pin('D ', Pin.OUT)
 
 # ------ Enable pins (PWM) ------
-motorPWMLeft = PWM(Pin(22))
-motorPWMRight = PWM(Pin(9))
+motorPWMLeft = PWM(Pin('D '))
+motorPWMRight = PWM(Pin('D '))
 motorPWMLeft.freq(1000)
 motorPWMRight.freq(1000)
 
@@ -85,14 +84,12 @@ def read_position():
     )
     return weighted_sum / total
 
-
-# ====== main loop ======
+# ===== start =====
 motorL1.high()
 motorL2.low()
 motorR1.high()
 motorR2.low()
 
-# ===== start =====
 i = 0
 while i < base_speed:
     motorPWMLeft.duty_u16(int(i))
@@ -100,7 +97,7 @@ while i < base_speed:
     i += .5
 # ===== main loop =====
 while True:
-    enc_a.irq(trigger=Pin.IRQ_RISING, handler=encoder_irq)
+    enc_b.irq(trigger=Pin.IRQ_RISING, handler=encoder_irq)
     if (positionMotoru > 16000 and positionMotoru < 17000):
         if (base_speed > 18000):
             base_speed -= 5
@@ -144,8 +141,6 @@ while True:
         set_motor(left_speed, right_speed, sensor_state)
         previous_error = error
 
-    # ------ anti fire fuse ------
-    time.sleep(0.01)
 
 # ------ motor stop ------
 while base_speed > 0:
