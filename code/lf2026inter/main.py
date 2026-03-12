@@ -15,14 +15,14 @@ def encoder_irq(pin):
 
 
 # ------ Sensor pins ------
-sensorR4 = Pin(17, Pin.IN)
-sensorR3 = Pin(16, Pin.IN)
-sensorR2 = Pin(18, Pin.IN)
-sensorR1 = Pin(19, Pin.IN)
-sensorL4 = Pin(15, Pin.IN)
-sensorL3 = Pin(14, Pin.IN)
-sensorL2 = Pin(13, Pin.IN)
-sensorL1 = Pin(12, Pin.IN)
+sensorR4 = Pin('D5', Pin.IN)
+sensorR3 = Pin('D6', Pin.IN)
+sensorR2 = Pin('D7', Pin.IN)
+sensorR1 = Pin('D8', Pin.IN)
+sensorL4 = Pin('D9', Pin.IN)
+sensorL3 = Pin('D10', Pin.IN)
+sensorL2 = Pin('D11', Pin.IN)
+sensorL1 = Pin('D12', Pin.IN)
 
 # ------ Motor control pins ------
 motorL1 = Pin(11, Pin.OUT)
