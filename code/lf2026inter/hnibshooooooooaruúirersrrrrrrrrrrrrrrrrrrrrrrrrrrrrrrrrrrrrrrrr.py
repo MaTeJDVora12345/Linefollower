@@ -15,4 +15,4 @@ sensorL1 = Pin('D12', Pin.IN)
 
 while True:
     print(sensorR4.value() , sensorR3.value() , sensorR2.value() , sensorR1.value() , sensorL1.value() , sensorL2.value() , sensorL3.value() , sensorL4.value())
-    time.sleep(1)
+    time.sleep(.2)
