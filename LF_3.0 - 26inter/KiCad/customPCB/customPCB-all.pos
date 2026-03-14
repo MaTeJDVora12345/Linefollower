@@ -1,0 +1,45 @@
+### Footprint positions - created on 2026-01-23T16:07:45+0100 ###
+### Printed by KiCad version 9.0.6
+## Unit = mm, Angle = deg.
+## Side : All
+# Ref     Val                          Package                                     PosX       PosY       Rot  Side
+C6        C_Polarized_22uF             C_1206_3216Metric                       111.9000  -140.7000  180.0000  bottom
+D2        LED_STATUS                   LED_0603_1608Metric                     110.5000  -135.7000    0.0000  bottom
+D3        D_Schottky_SS34              D_SMA                                   114.1000  -165.6000  180.0000  bottom
+D4        LED_POWER                    LED_0603_1608Metric                     109.6000  -138.8000    0.0000  bottom
+J1        BAT_IN                       AMASS_XT60-F_1x02_P7.20mm_Vertical       86.4000  -157.0000    0.0000  bottom
+J2        USB_C_Receptacle_USB2.0_16P  USB_C_Receptacle_GCT_USB4085             88.2250  -147.2750   90.0000  bottom
+J4        Conn_02x12_Odd_Even          IDC-Header_2x12_P2.54mm_Vertical_3D     121.7000  -173.5400    0.0000  bottom
+M1        Motor_L                      JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical   104.2000  -151.6000    0.0000  bottom
+M2        Motor_R                      JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical   104.2000  -158.6000    0.0000  bottom
+M3        Turbine                      JST_XH_B2B-XH-A_1x02_P2.50mm_Vertical   104.2000  -165.6000    0.0000  bottom
+R2        R_5.1k                       R_0603_1608Metric                        99.9000  -145.8000  180.0000  bottom
+R10       R_330                        R_0603_1608Metric                       113.5250  -135.7000    0.0000  bottom
+R11       R_1k                         R_0603_1608Metric                       112.6750  -138.8000    0.0000  bottom
+SW3       SW_Push_BOOT                 SW_SPST_B3U-1000P                       111.9700  -143.6000    0.0000  bottom
+SW5       SW_SHOW                      SW_SPDT_PCM12                            83.6000  -132.9000   90.0000  bottom
+C2        C_10nF                       C_0603_1608Metric                       100.2450  -167.8550   90.0000  top
+C4        C_Polarized_10uF             C_1206_3216Metric                       100.7500  -175.5550    0.0000  top
+C5        C_Polarized_220uF            CP_Elec_6.3x5.4                         106.9000  -181.7000  180.0000  top
+C7        C_1uF                        C_0603_1608Metric                        94.7000  -130.6000   90.0000  top
+C8        C_Polarized_10uF             C_1206_3216Metric                       100.7500  -173.1650    0.0000  top
+C9        C_100nF                      C_0603_1608Metric                        92.1750  -169.3000    0.0000  top
+D1        D_Schottky_SS34              D_SMA                                   106.8000  -169.9000    0.0000  top
+L1        L_33uH                       L_Taiyo-Yuden_NR-60xx                   106.9000  -174.9000    0.0000  top
+Q1        AO4407                       SOIC-8_3.9x4.9mm_P1.27mm                 94.6500  -174.4550    0.0000  top
+R1        R_10k                        R_0603_1608Metric                        90.0500  -175.4550   90.0000  top
+R3        R__3.24k                     R_0603_1608Metric                        92.9000  -165.4750  -90.0000  top
+R4        R_10k                        R_0603_1608Metric                        91.3700  -165.4750  -90.0000  top
+R5        R_10k                        R_0603_1608Metric                        96.7000  -130.6000   90.0000  top
+R6        R_10k                        R_0603_1608Metric                       117.0700  -148.9500   90.0000  top
+R7        R_5.1k                       R_0603_1608Metric                        84.8750  -143.0000    0.0000  top
+R8        R_10k                        R_0603_1608Metric                        92.1750  -170.8000    0.0000  top
+R9        R_2.2k                       R_0603_1608Metric                        92.1750  -167.8000    0.0000  top
+SW1       SW_SPDT_POWER                SW_SPDT_PCM12                            94.3500  -183.5700    0.0000  top
+SW2       SW_Push_RESET                SW_SPST_B3U-1000P                        95.1000  -138.6000    0.0000  top
+SW4       ARM_SW                       SW_SPDT_PCM12                           127.4250  -135.4000   90.0000  top
+U1        ESP32-S3-WROOM-1             ESP32-S3-WROOM-1                        108.0550  -133.9100    0.0000  top
+U4        TPS5430DDA                   TI_SO-PowerPAD-8_ThermalVias             96.5500  -167.7550  -90.0000  top
+U5        AMS1117-3.3                  SOT-223-3_TabPin2                       114.0000  -165.6000   90.0000  top
+U6        MCP3008                      SOIC-16_3.9x9.9mm_P1.27mm               114.2250  -155.7750  180.0000  top
+## End
