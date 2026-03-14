@@ -465,7 +465,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "dopiče.kicad_pro",
+    "filename": "lightVersion.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -705,7 +705,7 @@
     },
     "net_format_name": "KiCad",
     "page_layout_descr_file": "",
-    "plot_directory": "../../../../../../Desktop/LinefollowerV4/",
+    "plot_directory": "../../technicalDocumentation/",
     "space_save_all_events": true,
     "spice_current_sheet_as_root": false,
     "spice_external_command": "spice \"%I\"",
