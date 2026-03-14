@@ -1,59 +1,118 @@
 from machine import Pin, PWM
 import time
 
-enc_b = Pin('D ', Pin.IN, Pin.PULL_UP) #otacky2
+# ===== Encoder =====
+enc_b = Pin('D4', Pin.IN, Pin.PULL_UP)
 
-global positionMotoru
 positionMotoru = 0
 
-
 def encoder_irq(pin):
-    global position
+    global positionMotoru
     if enc_b.value() == 0:
         positionMotoru += 1
 
+enc_b.irq(trigger=Pin.IRQ_RISING, handler=encoder_irq)
 
-# ------ Sensor pins ------
-sensorR4 = Pin('D5', Pin.IN)
-sensorR3 = Pin('D6', Pin.IN)
-sensorR2 = Pin('D7', Pin.IN)
-sensorR1 = Pin('D8', Pin.IN)
-sensorL4 = Pin('D9', Pin.IN)
-sensorL3 = Pin('D10', Pin.IN)
-sensorL2 = Pin('D11', Pin.IN)
-sensorL1 = Pin('D12', Pin.IN)
+# ===== QTR-8RC sensor pins =====
+sensor_pins = [
+    Pin('D5', Pin.IN),
+    Pin('D6', Pin.IN),
+    Pin('D7', Pin.IN),
+    Pin('D8', Pin.IN),
+    Pin('D9', Pin.IN),
+    Pin('D10', Pin.IN),
+    Pin('D11', Pin.IN),
+    Pin('D12', Pin.IN)
+]
 
-# ------ Motor control pins ------
-motorL1 = Pin('D ', Pin.OUT)
-motorL2 = Pin('D ', Pin.OUT)
-motorR1 = Pin('D ', Pin.OUT)
-motorR2 = Pin('D ', Pin.OUT)
+sensor_values = [0]*8
 
-# ------ Enable pins (PWM) ------
-motorPWMLeft = PWM(Pin('D '))
-motorPWMRight = PWM(Pin('D '))
+# ===== Motor pins =====
+motorL1 = Pin('D1', Pin.OUT)
+motorL2 = Pin('D2', Pin.OUT)
+
+motorR1 = Pin('D13', Pin.OUT)
+motorR2 = Pin('D14', Pin.OUT)
+
+motorPWMLeft = PWM(Pin('D3'))
+motorPWMRight = PWM(Pin('D15'))
+
 motorPWMLeft.freq(1000)
 motorPWMRight.freq(1000)
 
-# ------ PID parameters ------
-global base_speed
+# ===== PID =====
 base_speed = 18000
-Kp = 9700.0
-Ki = 1.0
-Kd = 36000.0
 
-error = 0.0
-previous_error = 0.0
-integral = 0.0
+Kp = 9000
+Ki = 0
+Kd = 30000
+
+error = 0
+previous_error = 0
+integral = 0
 
 time.sleep(3)
 
+# ===== Read QTR sensors =====
+def read_sensors():
 
-# ====== Helper functions ======
-def set_motor(left_speed, right_speed, sensor_state):
-    left_speed = max(min(int(left_speed), 65535), -65535)
-    right_speed = max(min(int(right_speed), 65535), -65535)
-    # ------ direction control ------
+    global sensor_values
+    sensor_values = [0]*8
+
+    for p in sensor_pins:
+        p.init(Pin.OUT)
+        p.value(1)
+
+    time.sleep_us(10)
+
+    for p in sensor_pins:
+        p.init(Pin.IN)
+
+    start = time.ticks_us()
+
+    while True:
+
+        t = time.ticks_diff(time.ticks_us(), start)
+
+        for i,p in enumerate(sensor_pins):
+            if p.value() == 0 and sensor_values[i] == 0:
+                sensor_values[i] = t
+
+        if t > 3000:
+            break
+
+    return sensor_values
+
+
+# ===== Calculate line position =====
+def read_position():
+
+    values = read_sensors()
+
+    weights = [-3500,-2500,-1500,-500,500,1500,2500,3500]
+
+    weighted_sum = 0
+    total = 0
+
+    for i in range(8):
+
+        value = max(0,3000-values[i])
+
+        weighted_sum += value * weights[i]
+        total += value
+
+    if total == 0:
+        return None
+
+    return weighted_sum / total
+
+
+# ===== Motor control =====
+def set_motor(left_speed,right_speed):
+
+    left_speed = max(min(int(left_speed),65535),-65535)
+    right_speed = max(min(int(right_speed),65535),-65535)
+
     if left_speed >= 0:
         motorL1.high()
         motorL2.low()
@@ -67,85 +126,62 @@ def set_motor(left_speed, right_speed, sensor_state):
     else:
         motorR1.low()
         motorR2.high()
+
     motorPWMLeft.duty_u16(abs(left_speed))
     motorPWMRight.duty_u16(abs(right_speed))
 
 
-# ====== position reading function ======
-def read_position():
-    vsensorL1, vsensorL2, vsensorL3, vsensorL4 = sensorL1.value(), sensorL2.value(), sensorL3.value(), sensorL4.value()
-    vsensorR1, vsensorR2, vsensorR3, vsensorR4 = sensorR1.value(), sensorR2.value(), sensorR3.value(), sensorR4.value()
-    total = vsensorL1 + vsensorL2 + vsensorL3 + vsensorL4 + vsensorR1 + vsensorR2 + vsensorR3 + vsensorR4
-    if total == 0:
-        return None
-    weighted_sum = (
-            vsensorL1 * -3.5 + vsensorL2 * -2.5 + vsensorL3 * -1.5 + vsensorL4 * -0.5 +
-            vsensorR1 * 0.5 + vsensorR2 * 1.5 + vsensorR3 * 2.5 + vsensorR4 * 3.5
-    )
-    return weighted_sum / total
-
-# ===== start =====
-motorL1.high()
-motorL2.low()
-motorR1.high()
-motorR2.low()
-
+# ===== Soft start =====
 i = 0
+
 while i < base_speed:
     motorPWMLeft.duty_u16(int(i))
     motorPWMRight.duty_u16(int(i))
-    i += .5
-# ===== main loop =====
+    i += 100
+
+
+# ===== MAIN LOOP =====
 while True:
-    enc_b.irq(trigger=Pin.IRQ_RISING, handler=encoder_irq)
-    if (positionMotoru > 16000 and positionMotoru < 17000):
-        if (base_speed > 18000):
+
+    # --- encoder speed correction ---
+    if positionMotoru > 16000 and positionMotoru < 17000:
+        if base_speed > 18000:
             base_speed -= 5
-    if (positionMotoru > 17000):
-        if (base_speed < 18000):
+
+    if positionMotoru > 17000:
+        if base_speed < 18000:
             base_speed += 5
+
+    # --- read line position ---
     position = read_position()
-    sensor_state = f"{sensorL1.value()} {sensorL2.value()} {sensorL3.value()} {sensorL4.value()} {sensorR1.value()} {sensorR2.value()} {sensorR3.value()} {sensorR4.value()}"
 
-    if all(v == 1 for v in [sensorL4.value(), sensorL3.value(), sensorL2.value(), sensorL1.value()]):
-        motorL1.low()
-        motorL2.high()
-        motorR1.high()
-        motorR2.low()
+    if position is not None:
 
-        motorPWMLeft.duty_u16(8000)
-        motorPWMRight.duty_u16(18000)
+        error = position / 3500
 
-    elif all(v == 1 for v in [sensorR4.value(), sensorR3.value(), sensorR2.value(), sensorR1.value()]):
-        motorL1.high()
-        motorL2.low()
-        motorR1.low()
-        motorR2.high()
-
-        motorPWMLeft.duty_u16(18000)
-        motorPWMRight.duty_u16(8000)
-
-    if all(v == 1 for v in [sensorL4.value(), sensorL3.value(), sensorR1.value(), sensorR2.value()]):
-        break
-    elif position is not None:
-        # PID regulation
-        error = position
         integral += error
-        integral = max(min(integral, 100), -100)
+        integral = max(min(integral,100),-100)
+
         derivative = error - previous_error
-        correction = Kp * error + Ki * integral + Kd * derivative
+
+        correction = Kp*error + Ki*integral + Kd*derivative
 
         left_speed = base_speed + correction
         right_speed = base_speed - correction
 
-        set_motor(left_speed, right_speed, sensor_state)
+        set_motor(left_speed,right_speed)
+
         previous_error = error
 
 
-# ------ motor stop ------
+# ===== stop motors =====
 while base_speed > 0:
+
     motorPWMRight.duty_u16(base_speed)
     motorPWMLeft.duty_u16(base_speed)
-    base_speed -= 2
-    time.sleep(.0002)
-print("stop")
+
+    base_speed -= 200
+
+    time.sleep(0.01)
+
+print("STOP")
