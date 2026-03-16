@@ -1,20 +1,16 @@
 from machine import Pin, PWM
 import time
+#=========declaration=========
+#encoder
+enc = Pin('D1', Pin.IN, Pin.PULL_UP)
 
-# ===== Encoder =====
-enc_b = Pin('D4', Pin.IN, Pin.PULL_UP)
+#leds
+ledR = Pin('D14', Pin.OUT)
+ledG = Pin('D15', Pin.OUT)
+ledB = Pin('D13', Pin.OUT)
 
-positionMotoru = 0
-
-def encoder_irq(pin):
-    global positionMotoru
-    if enc_b.value() == 0:
-        positionMotoru += 1
-
-enc_b.irq(trigger=Pin.IRQ_RISING, handler=encoder_irq)
-
-# ===== QTR-8RC sensor pins =====
-sensor_pins = [
+#sensors
+sensorPins = [
     Pin('D5', Pin.IN),
     Pin('D6', Pin.IN),
     Pin('D7', Pin.IN),
@@ -25,163 +21,134 @@ sensor_pins = [
     Pin('D12', Pin.IN)
 ]
 
-sensor_values = [0]*8
+#motors
+motorLDir = Pin('D4', Pin.OUT)
+motorLPwm = PWM(Pin('D3'))
 
-# ===== Motor pins =====
-motorL1 = Pin('D1', Pin.OUT)
-motorL2 = Pin('D2', Pin.OUT)
+motorRDir = Pin('D29', Pin.OUT)
+motorRPwm = PWM(Pin('D28'))
 
-motorR1 = Pin('D13', Pin.OUT)
-motorR2 = Pin('D14', Pin.OUT)
+#=========functions=========
+def encoderIrq(pin):
+    global rotations
+    if enc.value() == 0:
+        rotations += 1
+def setRGB(r, g, b):
+    ledR.value(r)
+    ledG.value(g)
+    ledB.value(b)
+    
+def readSensors():
+    global sensorValues
+    sensorValues = [0]*8
 
-motorPWMLeft = PWM(Pin('D3'))
-motorPWMRight = PWM(Pin('D15'))
-
-motorPWMLeft.freq(1000)
-motorPWMRight.freq(1000)
-
-# ===== PID =====
-base_speed = 18000
-
-Kp = 9000
-Ki = 0
-Kd = 30000
-
-error = 0
-previous_error = 0
-integral = 0
-
-time.sleep(3)
-
-# ===== Read QTR sensors =====
-def read_sensors():
-
-    global sensor_values
-    sensor_values = [0]*8
-
-    for p in sensor_pins:
+    for p in sensorPins:
         p.init(Pin.OUT)
         p.value(1)
 
-    time.sleep_us(10)
-
-    for p in sensor_pins:
+    time.sleep_us(15)
+    
+    for p in sensorPins:
         p.init(Pin.IN)
 
     start = time.ticks_us()
 
     while True:
-
         t = time.ticks_diff(time.ticks_us(), start)
 
-        for i,p in enumerate(sensor_pins):
-            if p.value() == 0 and sensor_values[i] == 0:
-                sensor_values[i] = t
+        for i, p in enumerate(sensorPins):
+            if p.value() == 0 and sensorValues[i] == 0:
+                sensorValues[i] = t
 
-        if t > 3000:
+        if t > 2000:
             break
+    print(sensorValues)
+    return sensorValues
 
-    return sensor_values
-
-
-# ===== Calculate line position =====
-def read_position():
-
-    values = read_sensors()
-
-    weights = [-3500,-2500,-1500,-500,500,1500,2500,3500]
-
-    weighted_sum = 0
-    total = 0
-
+def position():
+    values = readSensors()
+    weights = [-3.5, -2.5, -1.5, -.5, .5, 1.5, 2.5, 3.5]
+    pos = 0
+    
     for i in range(8):
+        pos += values[i]*weights[i]
+    return int(pos + cal)
+    
+def setSpeed(rSpeed, lSpeed):
+    if rSpeed < 0:
+        rSpeed = 0
+    elif rSpeed > 65535:
+        rSpeed = 65535
+    if lSpeed < 0:
+        lSpeed = 0
+    elif lSpeed > 65535:
+        lSpeed = 65535
+    
+    motorRPwm.duty_u16(rSpeed)
+    motorLPwm.duty_u16(lSpeed)
 
-        value = max(0,3000-values[i])
+#=========prep=========
+#enc
+rotations = 0
+enc.irq(trigger=Pin.IRQ_RISING, handler=encoderIrq)
 
-        weighted_sum += value * weights[i]
-        total += value
+#motors
+motorLPwm.freq(1000)
+motorRPwm.freq(1000)
 
-    if total == 0:
-        return None
+#sensors
+sensorValues = [0]*8
+cal = 750
 
-    return weighted_sum / total
+# ===== PID =====
+baseSpeed = 30000
 
+Kp = 8000
+Ki = 0
+Kd = 0
 
-# ===== Motor control =====
-def set_motor(left_speed,right_speed):
-
-    left_speed = max(min(int(left_speed),65535),-65535)
-    right_speed = max(min(int(right_speed),65535),-65535)
-
-    if left_speed >= 0:
-        motorL1.high()
-        motorL2.low()
-    else:
-        motorL1.low()
-        motorL2.high()
-
-    if right_speed >= 0:
-        motorR1.high()
-        motorR2.low()
-    else:
-        motorR1.low()
-        motorR2.high()
-
-    motorPWMLeft.duty_u16(abs(left_speed))
-    motorPWMRight.duty_u16(abs(right_speed))
-
-
-# ===== Soft start =====
-i = 0
-
-while i < base_speed:
-    motorPWMLeft.duty_u16(int(i))
-    motorPWMRight.duty_u16(int(i))
-    i += 100
+error = 0
+previousError = 0
+integral = 0
 
 
-# ===== MAIN LOOP =====
+#
+setRGB(1,0,0)
+time.sleep(5)
+#=========main loop=========
+#start
+setRGB(0,1,1)
+#for i in range(0,baseSpeed,1):
+ #   setSpeed(i,i)
+  #  time.sleep(.0005)
+#loop
+setRGB(0,1,0)    
 while True:
+    if rotations > 30:
+        if baseSpeed < 30000:
+            baseSpeed += 20
+    elif rotations > 20:
+        if baseSpeed > 20000:
+            baseSpeed -= 20
+    
+    error = position() / 3500
 
-    # --- encoder speed correction ---
-    if positionMotoru > 16000 and positionMotoru < 17000:
-        if base_speed > 18000:
-            base_speed -= 5
+    integral += error
+    integral = max(min(integral, 100), -100)
 
-    if positionMotoru > 17000:
-        if base_speed < 18000:
-            base_speed += 5
+    derivative = error - previousError
 
-    # --- read line position ---
-    position = read_position()
+    correction = Kp * error + Ki * integral + Kd * derivative
 
-    if position is not None:
+    rightSpeed  = int(baseSpeed + correction *2)
+    leftSpeed = int(baseSpeed - correction *2)
 
-        error = position / 3500
-
-        integral += error
-        integral = max(min(integral,100),-100)
-
-        derivative = error - previous_error
-
-        correction = Kp*error + Ki*integral + Kd*derivative
-
-        left_speed = base_speed + correction
-        right_speed = base_speed - correction
-
-        set_motor(left_speed,right_speed)
-
-        previous_error = error
-
-
-# ===== stop motors =====
-while base_speed > 0:
-
-    motorPWMRight.duty_u16(base_speed)
-    motorPWMLeft.duty_u16(base_speed)
-
-    base_speed -= 200
-
-    time.sleep(0.01)
-
-print("STOP")
+    setSpeed(rightSpeed, leftSpeed)
+    previousError = error
+    
+    
+    
+    #debug
+    print(position())
+    print(rightSpeed, "  |  " ,leftSpeed)
+    time.sleep(.5)
