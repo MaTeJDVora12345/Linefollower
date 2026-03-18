@@ -60,13 +60,19 @@ def readSensors():
             if p.value() == 0 and sensorValues[i] == 0:
                 sensorValues[i] = t
 
-        if t > 2000:
+        if t > 3000:
             break
-    print(sensorValues)
     return sensorValues
 
 def position():
+    global lastVal
     values = readSensors()
+    if sum(values) < 2000:
+        values = lastVal
+        setRGB(1,0,0)
+    else:
+        setRGB(0,1,0)
+    lastVal = values
     weights = [-3.5, -2.5, -1.5, -.5, .5, 1.5, 2.5, 3.5]
     pos = 0
     
@@ -98,14 +104,15 @@ motorRPwm.freq(1000)
 
 #sensors
 sensorValues = [0]*8
-cal = 750
+cal = 0
+lastVal = [0]*8
 
 # ===== PID =====
-baseSpeed = 30000
+baseSpeed = 20000
 
-Kp = 8000
+Kp = 20000   
 Ki = 0
-Kd = 0
+Kd = 36000
 
 error = 0
 previousError = 0
@@ -113,8 +120,8 @@ integral = 0
 
 
 #
-setRGB(1,0,0)
-time.sleep(5)
+setRGB(0,0,1)
+time.sleep(2)
 #=========main loop=========
 #start
 setRGB(0,1,1)
@@ -149,6 +156,7 @@ while True:
     
     
     #debug
-    print(position())
-    print(rightSpeed, "  |  " ,leftSpeed)
-    time.sleep(.5)
+    #position()
+    #print(position()/3500)
+    #print(rightSpeed, "  |  " ,leftSpeed)
+    #time.sleep(.1)
